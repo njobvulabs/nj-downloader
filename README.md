@@ -23,33 +23,38 @@ GUI video downloader powered by yt-dlp and CustomTkinter.
 - Python 3.10+
 - ffmpeg (for format merging and audio extraction)
 
-## Install
-
-Choose one:
-
-### User-local install (no sudo)
+## Getting Started
 
 ```bash
-./install.sh
+git clone https://github.com/njobvulabs/nj-downloader.git
+cd nj-downloader
 ```
 
-Installs to `~/.local/share/nj-downloader/` and creates a launcher. The app appears in your app menu (log out/in may be needed).
+Then choose one of the options below.
 
-### System-wide install
-
-```bash
-sudo ./install.sh
-```
-
-Installs to `/opt/nj-downloader/`, installs system dependencies (ffmpeg, python3, pip), and registers the app for all users.
-
-### Quick start (no install)
+### Quick start — run without installing
 
 ```bash
 ./run.sh
 ```
 
-Creates a virtual environment, installs dependencies, and launches the app.
+Creates a virtual environment, installs dependencies, and launches the app right away.
+
+### User-local install (no sudo, appears in app menu)
+
+```bash
+./install.sh
+```
+
+Installs to `~/.local/share/nj-downloader/`, creates a launcher symlink in `~/.local/bin/`, and registers the app in your desktop menu. Log out/in may be needed for the menu entry to appear.
+
+### System-wide install (requires sudo)
+
+```bash
+sudo ./install.sh
+```
+
+Installs to `/opt/nj-downloader/`, automatically installs system dependencies (ffmpeg, python3, pip), and registers the app for all users.
 
 ### Uninstall
 
