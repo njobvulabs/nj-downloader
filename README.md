@@ -2,6 +2,9 @@
 
 GUI video downloader powered by yt-dlp and CustomTkinter.
 
+<img width="1366" height="719" alt="nj-downloader" src="https://github.com/user-attachments/assets/152429ca-8bd8-435f-8e65-ff317be3a24d" />
+
+
 ## Features
 
 - Download videos from YouTube and 1000+ other sites
