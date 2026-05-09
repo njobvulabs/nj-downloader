@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=nj-downloader
+Comment=GUI video downloader powered by yt-dlp
+Exec=nj-downloader %U
+Icon=nj-downloader
+Terminal=false
+Type=Application
+Categories=AudioVideo;Network;
+MimeType=x-scheme-handler/https;x-scheme-handler/http;
+StartupNotify=true
+StartupWMClass=nj-downloader
+Keywords=video;download;youtube;yt-dlp;media;
