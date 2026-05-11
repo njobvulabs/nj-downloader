@@ -1,6 +1,7 @@
 import queue
+from tkinter import messagebox
 import customtkinter as ctk
-from utils import clean_url
+from utils import clean_url, extract_size_for_quality
 from ui.url_frame import UrlFrame
 from ui.options_frame import OptionsFrame
 from ui.progress_frame import ProgressFrame
@@ -52,6 +53,8 @@ class MainWindow(ctk.CTkFrame):
         self.queue_frame.cancel_btn.configure(command=self._cancel_downloads)
         self.queue_frame.clear_btn.configure(command=self._clear_completed)
 
+        self.bind_all('<Delete>', self._on_delete_key)
+
     # --- URL handling ---------------------------------------------------
 
     def _on_add_url(self, url):
@@ -78,6 +81,8 @@ class MainWindow(ctk.CTkFrame):
             )
             return
 
+        quality = self.options_frame.get_options().get('quality', 'Best')
+
         if info.get('_type') == 'playlist' and info.get('entries'):
             entries = [e for e in info['entries'] if e]
             playlist_title = info.get('title', 'Untitled Playlist')
@@ -87,6 +92,7 @@ class MainWindow(ctk.CTkFrame):
                 if not entry_url:
                     continue
                 entry_title = entry.get('title', 'Unknown')
+                size = extract_size_for_quality(entry, quality)
                 item = {
                     'id': self._next_id,
                     'url': entry_url,
@@ -94,10 +100,11 @@ class MainWindow(ctk.CTkFrame):
                     'type': 'Video',
                     'status': 'pending',
                     'info': entry,
+                    'size': size,
                 }
                 self._next_id += 1
                 self.queue.append(item)
-                self.queue_frame.append(item['id'], 'Pending', entry_title, 'Video')
+                self.queue_frame.append(item['id'], 'Pending', entry_title, 'Video', size)
                 added += 1
 
             self.progress_frame.set_status(
@@ -106,6 +113,7 @@ class MainWindow(ctk.CTkFrame):
             return
 
         title = info.get('title', url)
+        size = extract_size_for_quality(info, quality)
         item = {
             'id': self._next_id,
             'url': url,
@@ -113,10 +121,11 @@ class MainWindow(ctk.CTkFrame):
             'type': 'Video',
             'status': 'pending',
             'info': info,
+            'size': size,
         }
         self._next_id += 1
         self.queue.append(item)
-        self.queue_frame.append(item['id'], 'Pending', title, 'Video')
+        self.queue_frame.append(item['id'], 'Pending', title, 'Video', size)
         self.progress_frame.set_status(f'Added: {title}')
 
     # --- Download orchestration -----------------------------------------
@@ -213,11 +222,32 @@ class MainWindow(ctk.CTkFrame):
         selected = self.queue_frame.get_selected_ids()
         if not selected:
             return
+
+        for item in self.queue:
+            if item['id'] in selected and item['status'] == 'downloading':
+                messagebox.showwarning(
+                    'Cannot Remove',
+                    'Cannot remove items that are currently downloading.',
+                )
+                return
+
+        if not messagebox.askyesno(
+            'Remove Items',
+            f'Remove {len(selected)} selected item(s) from the queue?',
+        ):
+            return
+
         self.queue = [
             item for item in self.queue if item['id'] not in selected
         ]
         for sid in selected:
             self.queue_frame.delete(sid)
+
+    def _on_delete_key(self, event):
+        from customtkinter import CTkEntry, CTkTextbox
+        if isinstance(event.widget, (CTkEntry, CTkTextbox)):
+            return
+        self._remove_selected()
 
     def _cancel_downloads(self):
         self.download_manager.cancel_all()
@@ -236,6 +266,7 @@ class MainWindow(ctk.CTkFrame):
                 ),
                 'title': item['title'],
                 'type': item['type'],
+                'size': item.get('size'),
             }
             for item in self.queue
         ]

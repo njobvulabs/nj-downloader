@@ -50,3 +50,45 @@ def clean_url(url):
     new_query = urlencode(cleaned, doseq=True) if cleaned else ''
 
     return parsed._replace(query=new_query).geturl()
+
+
+def extract_size_for_quality(info, quality):
+    if not info:
+        return None
+
+    quality_map = {
+        'Best': float('inf'),
+        '4K (2160p)': 2160,
+        '2K (1440p)': 1440,
+        '1080p': 1080,
+        '720p': 720,
+        '480p': 480,
+        '360p': 360,
+        'Audio Only': 0,
+    }
+    max_height = quality_map.get(quality)
+    if max_height is None:
+        return None
+
+    formats = info.get('formats', [])
+    if not formats:
+        return info.get('filesize') or info.get('filesize_approx')
+
+    if max_height == 0:
+        best_size = None
+        for f in formats:
+            if f.get('acodec') and f.get('acodec') != 'none':
+                size = f.get('filesize') or f.get('filesize_approx')
+                if size and (best_size is None or size > best_size):
+                    best_size = size
+        return best_size
+
+    best_size = None
+    for f in formats:
+        h = f.get('height')
+        if h and h <= max_height:
+            size = f.get('filesize') or f.get('filesize_approx')
+            if size and (best_size is None or size > best_size):
+                best_size = size
+
+    return best_size
