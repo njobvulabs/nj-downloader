@@ -7,6 +7,7 @@ STATUS_COLORS = {
     'Completed': ('#00CC66', '#00CC66'),
     'Error': ('#FF4444', '#FF4444'),
     'Cancelled': ('#888888', '#888888'),
+    'Paused': ('#5599FF', '#5599FF'),
 }
 
 
@@ -114,6 +115,12 @@ class QueueFrame(ctk.CTkFrame):
         self.cancel_btn = ctk.CTkButton(btn_frame, text='Cancel Downloads')
         self.cancel_btn.pack(side='left', padx=(0, 5))
 
+        self.pause_btn = ctk.CTkButton(btn_frame, text='Pause')
+        self.pause_btn.pack(side='left', padx=(0, 5))
+
+        self.retry_btn = ctk.CTkButton(btn_frame, text='Retry Failed')
+        self.retry_btn.pack(side='left', padx=(0, 5))
+
         self.clear_btn = ctk.CTkButton(btn_frame, text='Clear Completed')
         self.clear_btn.pack(side='left')
 
@@ -149,15 +156,6 @@ class QueueFrame(ctk.CTkFrame):
 
     def get_selected_ids(self):
         return list(self._selected_ids)
-
-    def clear_completed(self):
-        completed = {'Completed', 'Error', 'Cancelled'}
-        to_remove = [
-            iid for iid, row in self._rows.items()
-            if row.status in completed
-        ]
-        for iid in to_remove:
-            self.delete(iid)
 
     def get_all_ids(self):
         return list(self._rows.keys())

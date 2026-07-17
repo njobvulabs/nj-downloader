@@ -34,6 +34,7 @@ class UrlFrame(ctk.CTkFrame):
         self._update_theme_button()
 
         self.entry.bind('<Return>', lambda e: self._add())
+        self.entry.bind('<FocusIn>', lambda e: self._auto_paste())
 
     def _update_theme_button(self):
         mode = ctk.get_appearance_mode()
@@ -49,6 +50,16 @@ class UrlFrame(ctk.CTkFrame):
             text = self.winfo_toplevel().clipboard_get()
             self.entry.delete(0, 'end')
             self.entry.insert(0, text)
+        except tk.TclError:
+            pass
+
+    def _auto_paste(self):
+        if self.entry.get().strip():
+            return
+        try:
+            text = self.winfo_toplevel().clipboard_get().strip()
+            if text.startswith(('http://', 'https://')):
+                self.entry.insert(0, text)
         except tk.TclError:
             pass
 

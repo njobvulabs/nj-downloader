@@ -12,13 +12,20 @@ class App:
 
         self.root = ctk.CTk()
         self.root.title('nj-downloader')
-        self.root.geometry('800x650')
         self.root.minsize(650, 450)
+
+        geometry = self.config.get('window_geometry')
+        if geometry:
+            self.root.geometry(geometry)
+        else:
+            self.root.geometry('800x650')
 
         self.download_manager = DownloadManager()
         self.main_window = MainWindow(
             self.root, self.download_manager,
+            config=self.config,
             on_toggle_theme=self._toggle_theme,
+            on_config_change=self._save_config,
         )
         self.main_window.pack(fill='both', expand=True)
 
@@ -31,7 +38,14 @@ class App:
         self.config['theme'] = new
         cfg.save(self.config)
 
+    def _save_config(self, config=None):
+        if config:
+            self.config.update(config)
+        cfg.save(self.config)
+
     def _on_close(self):
+        self.config['window_geometry'] = self.root.winfo_geometry()
+        cfg.save(self.config)
         self.download_manager.cancel_all()
         self.root.destroy()
 

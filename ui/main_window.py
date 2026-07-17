@@ -13,16 +13,20 @@ STATUS_MAP = {
     'completed': 'Completed',
     'error': 'Error',
     'cancelled': 'Cancelled',
+    'paused': 'Paused',
 }
 COMPLETED_STATES = {'completed', 'error', 'cancelled'}
 POLL_MS = 150
 
 
 class MainWindow(ctk.CTkFrame):
-    def __init__(self, parent, download_manager, on_toggle_theme=None):
+    def __init__(self, parent, download_manager, config=None,
+                 on_toggle_theme=None, on_config_change=None):
         super().__init__(parent)
         self.download_manager = download_manager
+        self._config = config or {}
         self.on_toggle_theme = on_toggle_theme
+        self._on_config_change = on_config_change
         self.queue = []
         self._next_id = 0
         self._is_downloading = False
@@ -39,7 +43,10 @@ class MainWindow(ctk.CTkFrame):
         )
         self.url_frame.pack(fill='x', padx=15, pady=(15, 0))
 
-        self.options_frame = OptionsFrame(self)
+        self.options_frame = OptionsFrame(
+            self, config=self._config,
+            on_config_change=self._on_config_change,
+        )
         self.options_frame.pack(fill='x', padx=15, pady=(10, 0))
 
         self.queue_frame = QueueFrame(self)
@@ -51,14 +58,24 @@ class MainWindow(ctk.CTkFrame):
         self.queue_frame.download_btn.configure(command=self._start_download)
         self.queue_frame.remove_btn.configure(command=self._remove_selected)
         self.queue_frame.cancel_btn.configure(command=self._cancel_downloads)
+        self.queue_frame.pause_btn.configure(command=self._pause_download)
+        self.queue_frame.retry_btn.configure(command=self._retry_selected)
         self.queue_frame.clear_btn.configure(command=self._clear_completed)
 
-        self.bind_all('<Delete>', self._on_delete_key)
+        root = self.winfo_toplevel()
+        root.bind('<Delete>', self._on_delete_key)
+        root.bind('<Control-r>', lambda e: self._retry_selected())
+        root.bind('<Control-Return>', lambda e: self._start_download())
+        root.bind('<Control-p>', lambda e: self._pause_download())
+        root.bind('<Escape>', lambda e: self._cancel_downloads())
 
     # --- URL handling ---------------------------------------------------
 
     def _on_add_url(self, url):
         url = clean_url(url)
+        if not url.startswith(('http://', 'https://')):
+            self.progress_frame.set_status('Error: Invalid URL (must start with http:// or https://)')
+            return
         self.progress_frame.set_status('Parsing URL...')
         info_queue = self.download_manager.extract_info(url)
         self._info_queues[url] = info_queue
@@ -206,11 +223,6 @@ class MainWindow(ctk.CTkFrame):
             )
         elif status == 'cancelled':
             self.progress_frame.set_status('Download cancelled')
-            self._is_downloading = False
-            for qitem in self.queue:
-                if qitem['status'] == 'pending':
-                    qitem['status'] = 'cancelled'
-                    self.queue_frame.set_status(qitem['id'], 'Cancelled')
             return
 
         self._dl_item = None
@@ -251,7 +263,39 @@ class MainWindow(ctk.CTkFrame):
 
     def _cancel_downloads(self):
         self.download_manager.cancel_all()
+        for url in list(self._info_queues.keys()):
+            self.download_manager.cancel_extract(url)
+            del self._info_queues[url]
+        self._is_downloading = False
+        for item in self.queue:
+            if item['status'] == 'pending' or item['status'] == 'downloading':
+                item['status'] = 'cancelled'
+                self.queue_frame.set_status(item['id'], 'Cancelled')
         self.progress_frame.set_status('Cancelling...')
+
+    def _pause_download(self):
+        if not self._is_downloading or self._dl_item is None:
+            return
+        self.download_manager.cancel_all()
+        self._dl_item['status'] = 'paused'
+        self.queue_frame.set_status(self._dl_item['id'], 'Paused')
+        self._dl_queue = None
+        self._dl_item = None
+        self._is_downloading = False
+        self.progress_frame.set_status('Download paused')
+
+    def _retry_selected(self):
+        selected = self.queue_frame.get_selected_ids()
+        if not selected:
+            return
+        retried = False
+        for item in self.queue:
+            if item['id'] in selected and item['status'] in ('error', 'cancelled', 'paused'):
+                item['status'] = 'pending'
+                self.queue_frame.set_status(item['id'], 'Pending')
+                retried = True
+        if retried and not self._is_downloading:
+            self._start_download()
 
     def _clear_completed(self):
         self.queue = [

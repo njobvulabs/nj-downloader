@@ -2,6 +2,7 @@ import threading
 import queue
 import os
 import yt_dlp
+import config as cfg
 
 
 class AbortDownload(Exception):
@@ -11,19 +12,25 @@ class AbortDownload(Exception):
 class DownloadManager:
     def __init__(self):
         self._threads = []
+        self._extract_flags = {}
         self._cancelled = False
 
     def extract_info(self, url):
         q = queue.Queue()
+        cancel_flag = threading.Event()
 
         def _extract():
             try:
+                if cancel_flag.is_set():
+                    return
                 opts = {
                     'quiet': True,
                     'no_warnings': True,
                     'extract_flat': 'in_playlist',
                 }
                 with yt_dlp.YoutubeDL(opts) as ydl:
+                    if cancel_flag.is_set():
+                        return
                     info = ydl.extract_info(url, download=False)
                 q.put(info)
             except Exception as e:
@@ -32,7 +39,13 @@ class DownloadManager:
         t = threading.Thread(target=_extract, daemon=True)
         t.start()
         self._threads.append(t)
+        self._extract_flags[url] = cancel_flag
         return q
+
+    def cancel_extract(self, url):
+        flag = self._extract_flags.pop(url, None)
+        if flag:
+            flag.set()
 
     def download(self, url, options):
         q = queue.Queue()
@@ -68,7 +81,7 @@ class _DownloadThread(threading.Thread):
     def run(self):
         try:
             output_dir = self.options.get(
-                'output_dir', os.path.expanduser('~/Downloads/nj-downloader'),
+                'output_dir', cfg.DEFAULT['output_dir'],
             )
             os.makedirs(output_dir, exist_ok=True)
 

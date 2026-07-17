@@ -7,6 +7,10 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, 'config.json')
 DEFAULT = {
     'theme': 'Dark',
     'output_dir': os.path.expanduser('~/Downloads/nj-downloader'),
+    'quality': 'Best',
+    'container': 'MP4',
+    'subtitles': False,
+    'window_geometry': None,
 }
 
 
