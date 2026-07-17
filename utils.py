@@ -83,12 +83,27 @@ def extract_size_for_quality(info, quality):
                     best_size = size
         return best_size
 
-    best_size = None
+    best_video_size = None
+    best_audio_size = None
     for f in formats:
         h = f.get('height')
-        if h and h <= max_height:
-            size = f.get('filesize') or f.get('filesize_approx')
-            if size and (best_size is None or size > best_size):
-                best_size = size
+        vcodec = f.get('vcodec', '')
+        acodec = f.get('acodec', '')
+        size = f.get('filesize') or f.get('filesize_approx')
 
-    return best_size
+        is_video = vcodec and vcodec != 'none'
+        is_audio = (not is_video) and acodec and acodec != 'none'
+
+        if is_video and h and h <= max_height:
+            if size and (best_video_size is None or size > best_video_size):
+                best_video_size = size
+
+        if is_audio:
+            if size and (best_audio_size is None or size > best_audio_size):
+                best_audio_size = size
+
+    if best_video_size is not None and best_audio_size is not None:
+        return best_video_size + best_audio_size
+    if best_video_size is not None:
+        return best_video_size
+    return best_audio_size

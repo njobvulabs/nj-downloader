@@ -17,9 +17,13 @@ GUI video downloader powered by yt-dlp and CustomTkinter.
 - Download queue with sequential processing
 - Subtitle auto-download (English)
 - Real-time progress bar, speed, ETA, file size
+- **Pause and resume** — pause downloads and resume from where they left off
+- **Retry failed downloads** — retry individual items or all failures
 - Cancel active downloads, remove queue items, clear completed
+- **Keyboard shortcuts** — Ctrl+Return, Ctrl+R, Ctrl+P, Escape, Delete
+- **Auto-detect clipboard URL** — paste URL is auto-filled on focus
+- **Persistent settings** — quality, format, subtitles, output dir, and window size are saved across sessions
 - Custom output directory
-- **App menu integration** — appears in your desktop launcher after install
 
 ## Requirements
 
@@ -77,6 +81,20 @@ sudo ./install.sh --uninstall     # system-wide
 5. Monitor progress — DASH streams show separate video/audio phases
 6. Files are saved to `~/Downloads/nj-downloader/` (configurable)
 
+### Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+Return` | Start download |
+| `Ctrl+R` | Retry selected failed items |
+| `Ctrl+P` | Pause active download |
+| `Escape` | Cancel all downloads |
+| `Delete` | Remove selected queue items |
+
 ### Theme toggle
 
 Click the sun/moon button (☾ / ☀) next to "Add to Queue" to switch between Dark and Light mode. Your preference is saved automatically.
+
+## Developed by
+
+Alfred Njobvu

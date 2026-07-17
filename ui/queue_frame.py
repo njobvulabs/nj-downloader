@@ -10,6 +10,11 @@ STATUS_COLORS = {
     'Paused': ('#5599FF', '#5599FF'),
 }
 
+COL_STATUS = 0
+COL_TITLE = 1
+COL_TYPE = 2
+COL_SIZE = 3
+
 
 class QueueRow(ctk.CTkFrame):
     def __init__(self, parent, item_id, status, title, type_, size, on_select):
@@ -26,17 +31,19 @@ class QueueRow(ctk.CTkFrame):
             self, text=status, text_color=color,
             width=90, anchor='w',
         )
-        self.status_label.pack(side='left', padx=(8, 5), pady=6)
+        self.status_label.grid(row=0, column=COL_STATUS, sticky='w', padx=(8, 5), pady=6)
 
         self.title_label = ctk.CTkLabel(self, text=title, anchor='w')
-        self.title_label.pack(side='left', fill='x', expand=True, padx=5, pady=6)
+        self.title_label.grid(row=0, column=COL_TITLE, sticky='ew', padx=5, pady=6)
+
+        self.type_label = ctk.CTkLabel(self, text=type_, width=80, anchor='e')
+        self.type_label.grid(row=0, column=COL_TYPE, sticky='e', padx=(5, 8), pady=6)
 
         size_text = format_bytes(size)
         self.size_label = ctk.CTkLabel(self, text=size_text, width=80, anchor='e')
-        self.size_label.pack(side='right', padx=5, pady=6)
+        self.size_label.grid(row=0, column=COL_SIZE, sticky='e', padx=5, pady=6)
 
-        self.type_label = ctk.CTkLabel(self, text=type_, width=80, anchor='e')
-        self.type_label.pack(side='right', padx=(5, 8), pady=6)
+        self.columnconfigure(COL_TITLE, weight=1)
 
         self.bind('<Button-1>', self._click)
         self.status_label.bind('<Button-1>', self._click)
@@ -86,19 +93,20 @@ class QueueFrame(ctk.CTkFrame):
         ctk.CTkLabel(
             header, text='Status', width=90, anchor='w',
             font=ctk.CTkFont(size=12, weight='bold'),
-        ).pack(side='left', padx=(8, 5))
+        ).grid(row=0, column=COL_STATUS, sticky='w', padx=(8, 5))
         ctk.CTkLabel(
             header, text='Title', anchor='w',
             font=ctk.CTkFont(size=12, weight='bold'),
-        ).pack(side='left', fill='x', expand=True, padx=5)
+        ).grid(row=0, column=COL_TITLE, sticky='ew', padx=5)
         ctk.CTkLabel(
             header, text='Type', width=80, anchor='e',
             font=ctk.CTkFont(size=12, weight='bold'),
-        ).pack(side='right', padx=(5, 8))
+        ).grid(row=0, column=COL_TYPE, sticky='e', padx=(5, 8))
         ctk.CTkLabel(
             header, text='Size', width=80, anchor='e',
             font=ctk.CTkFont(size=12, weight='bold'),
-        ).pack(side='right', padx=5)
+        ).grid(row=0, column=COL_SIZE, sticky='e', padx=5)
+        header.columnconfigure(COL_TITLE, weight=1)
 
         self.scroll_frame = ctk.CTkScrollableFrame(self)
         self.scroll_frame.pack(fill='both', expand=True, padx=5, pady=2)
