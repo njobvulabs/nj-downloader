@@ -44,9 +44,16 @@ class App:
         cfg.save(self.config)
 
     def _on_close(self):
-        self.config['window_geometry'] = self.root.winfo_geometry()
-        cfg.save(self.config)
-        self.download_manager.cancel_all()
+        try:
+            self.config['window_geometry'] = self.root.winfo_geometry()
+            cfg.save(self.config)
+        except Exception:
+            pass
+        try:
+            self.download_manager.cancel_all()
+        except Exception:
+            pass
+        self.root.quit()
         self.root.destroy()
 
     def run(self):
