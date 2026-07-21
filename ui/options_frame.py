@@ -1,6 +1,10 @@
-import tkinter as tk
-from tkinter import filedialog
+from tkinter import IntVar
+import subprocess
+import shutil
 import customtkinter as ctk
+
+VIDEO_FORMATS = ['MP4', 'WebM', 'MKV']
+AUDIO_FORMATS = ['MP3', 'AAC', 'FLAC', 'OGG']
 
 
 class OptionsFrame(ctk.CTkFrame):
@@ -26,7 +30,7 @@ class OptionsFrame(ctk.CTkFrame):
             inner, variable=self.quality_var,
             values=['Best', '4K (2160p)', '2K (1440p)', '1080p', '720p', '480p', '360p', 'Audio Only'],
             width=130,
-            command=lambda _: self._save_to_config(),
+            command=self._on_quality_changed,
         )
         self.quality_menu.grid(row=0, column=1, sticky='w', padx=(0, 15))
 
@@ -34,13 +38,13 @@ class OptionsFrame(ctk.CTkFrame):
         self.container_var = ctk.StringVar(value='MP4')
         self.container_menu = ctk.CTkOptionMenu(
             inner, variable=self.container_var,
-            values=['MP4', 'WebM', 'MKV'],
+            values=VIDEO_FORMATS,
             width=80,
             command=lambda _: self._save_to_config(),
         )
         self.container_menu.grid(row=0, column=3, sticky='w', padx=(0, 15))
 
-        self.subtitles_var = tk.IntVar(value=0)
+        self.subtitles_var = IntVar(value=0)
         self.subtitles_cb = ctk.CTkCheckBox(
             inner, text='Subtitles',
             variable=self.subtitles_var, onvalue=1, offvalue=0,
@@ -63,9 +67,24 @@ class OptionsFrame(ctk.CTkFrame):
         from config import DEFAULT
         return DEFAULT['output_dir']
 
+    def _on_quality_changed(self, quality):
+        is_audio = quality == 'Audio Only'
+        current = self.container_var.get()
+        new_values = AUDIO_FORMATS if is_audio else VIDEO_FORMATS
+        self.container_menu.configure(values=new_values)
+        if current in new_values:
+            self.container_var.set(current)
+        else:
+            self.container_var.set(new_values[0])
+        self._save_to_config()
+
     def _load_from_config(self):
-        self.quality_var.set(self._config.get('quality', 'Best'))
-        self.container_var.set(self._config.get('container', 'MP4'))
+        quality = self._config.get('quality', 'Best')
+        self.quality_var.set(quality)
+        self._on_quality_changed(quality)
+        container = self._config.get('container', 'MP4')
+        if container in self.container_menu.cget('values'):
+            self.container_var.set(container)
         self.subtitles_var.set(1 if self._config.get('subtitles', False) else 0)
         output = self._config.get('output_dir', self._default_output_dir())
         self.output_var.set(output)
@@ -82,9 +101,45 @@ class OptionsFrame(ctk.CTkFrame):
         self._on_config_change(self._config)
 
     def _browse(self):
-        path = filedialog.askdirectory(title='Select Download Directory')
+        path = self._native_dir_picker()
         if path:
             self.output_var.set(path)
+
+    def _native_dir_picker(self):
+        desktop = self._detect_desktop()
+        if desktop == 'kde' and shutil.which('kdialog'):
+            try:
+                result = subprocess.run(
+                    ['kdialog', '--getexistingdirectory', self.output_var.get()],
+                    capture_output=True, text=True, timeout=30,
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    return result.stdout.strip()
+            except Exception:
+                pass
+        if shutil.which('zenity'):
+            try:
+                result = subprocess.run(
+                    ['zenity', '--file-selection', '--directory',
+                     '--title=Select Download Directory'],
+                    capture_output=True, text=True, timeout=30,
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    return result.stdout.strip()
+            except Exception:
+                pass
+        return None
+
+    @staticmethod
+    def _detect_desktop():
+        import os
+        for var in ('XDG_CURRENT_DESKTOP', 'DESKTOP_SESSION'):
+            val = os.environ.get(var, '').lower()
+            if 'kde' in val:
+                return 'kde'
+            if 'gnome' in val or 'unity' in val or 'cinnamon' in val or 'mate' in val or 'xfce' in val:
+                return 'gtk'
+        return 'gtk'
 
     def get_options(self):
         output = self.output_entry.get().strip()

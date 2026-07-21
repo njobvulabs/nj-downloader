@@ -1,4 +1,3 @@
-import os
 from urllib.parse import urlencode, parse_qs, urlparse
 
 
@@ -20,10 +19,6 @@ def format_eta(seconds):
     h, s = divmod(seconds, 3600)
     m, s = divmod(s, 60)
     return f'{h:02d}:{m:02d}:{s:02d}'
-
-
-def default_output_dir():
-    return os.path.expanduser('~/Downloads/nj-downloader')
 
 
 def clean_url(url):

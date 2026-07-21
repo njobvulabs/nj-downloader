@@ -13,7 +13,6 @@ class DownloadManager:
     def __init__(self):
         self._threads = []
         self._extract_flags = {}
-        self._cancelled = False
 
     def extract_info(self, url):
         q = queue.Queue()
@@ -97,13 +96,13 @@ class _DownloadThread(threading.Thread):
             quality = self.options.get('quality', 'Best')
             container = self.options.get('container', 'MP4')
             subtitles = self.options.get('subtitles', False)
-            playlist_items = self.options.get('playlist_items')
-
             if quality == 'Audio Only':
+                codec_map = {'MP3': 'mp3', 'AAC': 'aac', 'FLAC': 'flac', 'OGG': 'vorbis'}
+                preferred = codec_map.get(container, 'mp3')
                 ydl_opts['format'] = 'bestaudio/best'
                 ydl_opts['postprocessors'] = [{
                     'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
+                    'preferredcodec': preferred,
                 }]
             else:
                 quality_map = {
@@ -131,9 +130,6 @@ class _DownloadThread(threading.Thread):
                 ydl_opts['writesubtitles'] = True
                 ydl_opts['writeautomaticsub'] = True
                 ydl_opts['subtitleslangs'] = ['en']
-
-            if playlist_items:
-                ydl_opts['playlist_items'] = playlist_items
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.url])

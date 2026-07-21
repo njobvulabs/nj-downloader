@@ -23,7 +23,7 @@ GUI video downloader powered by yt-dlp and CustomTkinter.
 - **Keyboard shortcuts** — Ctrl+Return, Ctrl+R, Ctrl+P, Escape, Delete
 - **Auto-detect clipboard URL** — paste URL is auto-filled on focus
 - **Persistent settings** — quality, format, subtitles, output dir, and window size are saved across sessions
-- Custom output directory
+- **Custom output directory** — native OS folder picker (zenity/kdialog)
 
 ## Requirements
 
@@ -73,13 +73,13 @@ sudo ./install.sh --uninstall     # system-wide
 ## Usage
 
 1. Paste a video or playlist URL
-2. Click **Add to Queue**
+2. Click **Add to Queue** (single video) or **Add Playlist** (expand full playlist)
    - Single video → added as one item
    - Playlist → expanded into individual videos (remove unwanted ones)
 3. Select quality, format, and options
 4. Click **Download All**
 5. Monitor progress — DASH streams show separate video/audio phases
-6. Files are saved to `~/Downloads/nj-downloader/` (configurable)
+6. Files are saved to `~/Downloads/nj-downloader/` (configurable via Browse button)
 
 ### Keyboard shortcuts
 

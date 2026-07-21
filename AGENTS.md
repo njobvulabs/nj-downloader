@@ -22,7 +22,7 @@ Creates venv if needed, installs deps from `requirements.txt`, runs `python main
 - `ui/` → CustomTkinter frames:
   - `main_window.py` → orchestrates queue, polling (`after(POLL_MS, ...)`), download lifecycle, pause/resume, retry
   - `url_frame.py` → URL entry with auto-paste on focus (detects clipboard URLs)
-  - `options_frame.py` → quality/format/subtitles/output; persists changes to config via callback
+  - `options_frame.py` → quality/format/subtitles/output; persists changes to config via callback; Browse uses native OS folder picker (zenity/kdialog), no tkinter fallback
   - `queue_frame.py` → scrollable queue with status colors; buttons: Download All, Remove, Pause, Retry Failed, Clear Completed
   - `progress_frame.py` → progress bar, speed, ETA, size, DASH phase display
 

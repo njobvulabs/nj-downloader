@@ -1,6 +1,7 @@
 import queue
 from tkinter import messagebox
 import customtkinter as ctk
+from customtkinter import CTkEntry, CTkTextbox
 from utils import clean_url, extract_size_for_quality
 from ui.url_frame import UrlFrame
 from ui.options_frame import OptionsFrame
@@ -39,6 +40,7 @@ class MainWindow(ctk.CTkFrame):
         self.url_frame = UrlFrame(
             self,
             on_add_url=self._on_add_url,
+            on_add_playlist=self._on_add_playlist,
             on_toggle_theme=self.on_toggle_theme,
         )
         self.url_frame.pack(fill='x', padx=15, pady=(15, 0))
@@ -71,8 +73,9 @@ class MainWindow(ctk.CTkFrame):
 
     # --- URL handling ---------------------------------------------------
 
-    def _on_add_url(self, url):
-        url = clean_url(url)
+    def _on_add_url(self, url, clean=True):
+        if clean:
+            url = clean_url(url)
         if not url.startswith(('http://', 'https://')):
             self.progress_frame.set_status('Error: Invalid URL (must start with http:// or https://)')
             return
@@ -80,6 +83,9 @@ class MainWindow(ctk.CTkFrame):
         info_queue = self.download_manager.extract_info(url)
         self._info_queues[url] = info_queue
         self.after(POLL_MS, self._poll_info, url, info_queue)
+
+    def _on_add_playlist(self, url):
+        self._on_add_url(url, clean=False)
 
     def _poll_info(self, url, info_queue):
         if url not in self._info_queues:
@@ -256,7 +262,6 @@ class MainWindow(ctk.CTkFrame):
             self.queue_frame.delete(sid)
 
     def _on_delete_key(self, event):
-        from customtkinter import CTkEntry, CTkTextbox
         if isinstance(event.widget, (CTkEntry, CTkTextbox)):
             return
         self._remove_selected()

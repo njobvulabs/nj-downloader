@@ -3,9 +3,10 @@ import customtkinter as ctk
 
 
 class UrlFrame(ctk.CTkFrame):
-    def __init__(self, parent, on_add_url=None, on_toggle_theme=None):
+    def __init__(self, parent, on_add_url=None, on_add_playlist=None, on_toggle_theme=None):
         super().__init__(parent)
         self.on_add_url = on_add_url
+        self.on_add_playlist = on_add_playlist
         self.on_toggle_theme = on_toggle_theme
         self._build()
 
@@ -26,6 +27,11 @@ class UrlFrame(ctk.CTkFrame):
 
         self.add_btn = ctk.CTkButton(row, text='Add to Queue', command=self._add)
         self.add_btn.pack(side='left', padx=(0, 5))
+
+        self.add_playlist_btn = ctk.CTkButton(
+            row, text='Add Playlist', width=100, command=self._add_playlist,
+        )
+        self.add_playlist_btn.pack(side='left', padx=(0, 5))
 
         self.theme_btn = ctk.CTkButton(
             row, text='', width=40, command=self._toggle_theme,
@@ -67,4 +73,10 @@ class UrlFrame(ctk.CTkFrame):
         url = self.entry.get().strip()
         if url and self.on_add_url:
             self.on_add_url(url)
+            self.entry.delete(0, 'end')
+
+    def _add_playlist(self):
+        url = self.entry.get().strip()
+        if url and self.on_add_playlist:
+            self.on_add_playlist(url)
             self.entry.delete(0, 'end')
